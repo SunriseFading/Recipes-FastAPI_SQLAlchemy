@@ -4,7 +4,7 @@ from app.schemas.ingredients import Ingredient as IngredientSchema
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class IngredientCRUD:
+class IngredientService:
     @staticmethod
     async def bulk_create(
         recipe_id: int, ingredients_schema: list[IngredientSchema], session: AsyncSession

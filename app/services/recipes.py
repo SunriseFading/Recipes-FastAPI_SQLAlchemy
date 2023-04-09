@@ -1,5 +1,5 @@
-from app.crud.ingredients import IngredientCRUD
-from app.crud.steps import StepCRUD
+from app.services.ingredients import IngredientService
+from app.services.steps import StepCRUD
 from app.models.recipes import Recipe as RecipeModel
 from app.models.recipes import RecipeIngredient as RecipeIngredientModel
 from app.models.steps import Step as StepModel
@@ -11,13 +11,13 @@ from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class RecipeCRUD:
+class RecipeService:
     @classmethod
     async def create(cls, recipe_schema: RecipeSchema, session: AsyncSession):
         recipe = await RecipeModel(
             name=recipe_schema.name, description=recipe_schema.description
         ).create(session=session)
-        await IngredientCRUD.bulk_create(
+        await IngredientService.bulk_create(
             recipe_id=recipe.id,
             ingredients_schema=recipe_schema.ingredients,
             session=session,
@@ -63,7 +63,7 @@ class RecipeCRUD:
         )
         await RecipeIngredientModel.bulk_delete(instances=recipes_ingredients, session=session)
         await StepModel.bulk_delete(instances=recipe.steps, session=session)
-        await IngredientCRUD.bulk_create(
+        await IngredientService.bulk_create(
             recipe_id=recipe.id,
             ingredients_schema=recipe_schema.ingredients,
             session=session,

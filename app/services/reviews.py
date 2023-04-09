@@ -1,4 +1,4 @@
-from app.crud.recipes import RecipeCRUD
+from app.services.recipes import RecipeService
 from app.models.reviews import Review as ReviewModel
 from app.models.users import User as UserModel
 from app.schemas.reviews import ReviewParams
@@ -16,7 +16,7 @@ class ReviewCRUD:
         user_email: str,
         session: AsyncSession,
     ):
-        recipe = await RecipeCRUD.get(id=id, session=session)
+        recipe = await RecipeService.get(id=id, session=session)
         user = await UserModel.get(email=user_email, session=session)
         if await ReviewModel.get(user_id=user.id, recipe_id=recipe.id, session=session):
             raise HTTPException(
@@ -26,7 +26,7 @@ class ReviewCRUD:
         review = await ReviewModel(
             rating=params.rating, user_id=user.id, recipe_id=recipe.id
         ).create(session=session)
-        await RecipeCRUD.update_rating(
+        await RecipeService.update_rating(
             recipe=recipe, review_rating=review.rating, session=session
         )
         return review

@@ -1,5 +1,5 @@
 from app.config import jwt_settings
-from app.crud.reviews import ReviewCRUD
+from app.services.reviews import ReviewCRUD
 from app.database import get_session
 from app.schemas.reviews import ReviewParams as ReviewParamsSchema
 from app.utils.messages import messages

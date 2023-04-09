@@ -1,4 +1,4 @@
-from app.crud.recipes import RecipeCRUD
+from app.services.recipes import RecipeService
 from app.database import async_session
 from app.models.recipes import Recipe as RecipeModel
 from app.schemas.ingredients import Ingredient
@@ -32,4 +32,4 @@ async def create_init_data(
                 recipe_schema.description = (
                     f"№{i} A classic Italian dish that's perfect for a hearty meal."
                 )
-                await RecipeCRUD.create(recipe_schema=recipe_schema, session=session)
+                await RecipeService.create(recipe_schema=recipe_schema, session=session)

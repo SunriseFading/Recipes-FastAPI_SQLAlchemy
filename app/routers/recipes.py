@@ -1,5 +1,5 @@
 from app.config import jwt_settings
-from app.crud.recipes import RecipeCRUD
+from app.services.recipes import RecipeService
 from app.database import get_session
 from app.schemas.recipes import Ingredient as IngredientSchema
 from app.schemas.recipes import Recipe as RecipeSchema
@@ -28,7 +28,7 @@ async def get_all(
     params: RecipeParamsSchema = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
-    if recipes := await RecipeCRUD.get_all(
+    if recipes := await RecipeService.get_all(
         params=params, session=session
     ):
         return [RecipeResponseSchema.from_orm(recipe) for recipe in recipes]
@@ -43,7 +43,7 @@ async def get_by_ingredients(
     ingredients: list[IngredientSchema],
     session: AsyncSession = Depends(get_session),
 ):
-    if recipes := await RecipeCRUD.get_by_ingredients(
+    if recipes := await RecipeService.get_by_ingredients(
         ingredients=ingredients, session=session
     ):
         return [RecipeResponseSchema.from_orm(recipe) for recipe in recipes]
@@ -51,7 +51,7 @@ async def get_by_ingredients(
 
 @router.get("/get/{id}", status_code=status.HTTP_200_OK, summary="Get recipe by id")
 async def get(id: int, session: AsyncSession = Depends(get_session)):
-    if recipe := await RecipeCRUD.get(id=id, session=session):
+    if recipe := await RecipeService.get(id=id, session=session):
         return RecipeResponseSchema.from_orm(recipe)
 
 
@@ -63,7 +63,7 @@ async def create(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
     authorize.jwt_required()
-    await RecipeCRUD.create(recipe_schema=recipe_schema, session=session)
+    await RecipeService.create(recipe_schema=recipe_schema, session=session)
     return {"detail": messages.RECIPE_CREATED}
 
 
@@ -78,7 +78,7 @@ async def upload_photo(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
     authorize.jwt_required()
-    await RecipeCRUD.upload_photo(id=id, photo=photo, session=session)
+    await RecipeService.upload_photo(id=id, photo=photo, session=session)
     return {"detail": messages.RECIPE_PHOTO_UPLOADED}
 
 
@@ -92,7 +92,7 @@ async def download_photo(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
     authorize.jwt_required()
-    return FileResponse(await RecipeCRUD.download_photo(id=id, session=session))
+    return FileResponse(await RecipeService.download_photo(id=id, session=session))
 
 
 @router.post(
@@ -106,7 +106,7 @@ async def update(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
     authorize.jwt_required()
-    await RecipeCRUD.update(id=id, recipe_schema=recipe_schema, session=session)
+    await RecipeService.update(id=id, recipe_schema=recipe_schema, session=session)
     return {"detail": messages.RECIPE_UPDATED}
 
 
@@ -118,5 +118,5 @@ async def delete(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
     authorize.jwt_required()
-    await RecipeCRUD.delete(id=id, session=session)
+    await RecipeService.delete(id=id, session=session)
     return {"detail": messages.RECIPE_DELETED}

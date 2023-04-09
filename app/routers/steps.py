@@ -1,5 +1,5 @@
 from app.config import jwt_settings
-from app.crud.recipes import StepCRUD
+from app.services.recipes import StepCRUD
 from app.database import get_session
 from app.utils.messages import messages
 from fastapi import APIRouter, Depends, Security, UploadFile, status
