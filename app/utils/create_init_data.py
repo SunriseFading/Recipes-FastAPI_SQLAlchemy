@@ -1,13 +1,13 @@
 from app.crud.recipes import RecipeCRUD
 from app.database import async_session
-from app.models.recipes import Recipe as m_Recipe
+from app.models.recipes import Recipe as RecipeModel
 from app.schemas.ingredients import Ingredient
-from app.schemas.recipes import Recipe as s_Recipe
+from app.schemas.recipes import Recipe as RecipeSchema
 from app.schemas.steps import Step
 
 
 async def create_init_data(
-    recipe_schema: s_Recipe = s_Recipe(
+    recipe_schema: RecipeSchema = RecipeSchema(
         name="test recipe",
         description="test desc",
         ingredients=[Ingredient(name="onion"), Ingredient(name="tomato")],
@@ -26,7 +26,7 @@ async def create_init_data(
     )
 ):
     async with async_session() as session:
-        if not (await m_Recipe.all(session=session)):
+        if not (await RecipeModel.all(session=session)):
             for i in range(1, 101):
                 recipe_schema.name = f"№{i} Spaghetti Bolognese"
                 recipe_schema.description = (

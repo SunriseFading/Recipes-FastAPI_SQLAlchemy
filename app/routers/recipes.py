@@ -1,9 +1,9 @@
 from app.config import jwt_settings
 from app.crud.recipes import RecipeCRUD
 from app.database import get_session
-from app.schemas.recipes import Ingredient as s_Ingredient
-from app.schemas.recipes import Recipe as s_Recipe
-from app.schemas.recipes import RecipeParams, RecipeResponse
+from app.schemas.recipes import Ingredient as IngredientSchema
+from app.schemas.recipes import Recipe as RecipeSchema
+from app.schemas.recipes import RecipeParams as RecipeParamsSchema, RecipeResponse as RecipeResponseSchema
 from app.utils.messages import messages
 from fastapi import APIRouter, Depends, Security, UploadFile, status
 from fastapi.responses import FileResponse
@@ -25,13 +25,13 @@ def get_jwt_settings():
 
 @router.get("/get", status_code=status.HTTP_200_OK, summary="Get all recipes")
 async def get_all(
-    recipe_params: RecipeParams = Depends(),
+    params: RecipeParamsSchema = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
     if recipes := await RecipeCRUD.get_all(
-        recipe_params=recipe_params, session=session
+        params=params, session=session
     ):
-        return [RecipeResponse.from_orm(recipe) for recipe in recipes]
+        return [RecipeResponseSchema.from_orm(recipe) for recipe in recipes]
 
 
 @router.post(
@@ -40,24 +40,24 @@ async def get_all(
     summary="Get recipes by ingredients list",
 )
 async def get_by_ingredients(
-    ingredients: list[s_Ingredient],
+    ingredients: list[IngredientSchema],
     session: AsyncSession = Depends(get_session),
 ):
     if recipes := await RecipeCRUD.get_by_ingredients(
         ingredients=ingredients, session=session
     ):
-        return [RecipeResponse.from_orm(recipe) for recipe in recipes]
+        return [RecipeResponseSchema.from_orm(recipe) for recipe in recipes]
 
 
 @router.get("/get/{id}", status_code=status.HTTP_200_OK, summary="Get recipe by id")
 async def get(id: int, session: AsyncSession = Depends(get_session)):
     if recipe := await RecipeCRUD.get(id=id, session=session):
-        return RecipeResponse.from_orm(recipe)
+        return RecipeResponseSchema.from_orm(recipe)
 
 
 @router.post("/create", status_code=status.HTTP_201_CREATED, summary="Create recipe")
 async def create(
-    recipe_schema: s_Recipe,
+    recipe_schema: RecipeSchema,
     session: AsyncSession = Depends(get_session),
     authorize: AuthJWT = Depends(),
     credentials: HTTPAuthorizationCredentials = Security(security),
@@ -100,7 +100,7 @@ async def download_photo(
 )
 async def update(
     id: int,
-    recipe_schema: s_Recipe,
+    recipe_schema: RecipeSchema,
     session: AsyncSession = Depends(get_session),
     authorize: AuthJWT = Depends(),
     credentials: HTTPAuthorizationCredentials = Security(security),

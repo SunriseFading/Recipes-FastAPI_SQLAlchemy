@@ -1,11 +1,11 @@
 from app.crud.ingredients import IngredientCRUD
 from app.crud.steps import StepCRUD
-from app.models.recipes import Recipe as m_Recipe
-from app.models.recipes import RecipeIngredient as m_RecipeIngredient
-from app.models.steps import Step as m_Step
-from app.schemas.recipes import Ingredient as s_Ingredient
-from app.schemas.recipes import Recipe as s_Recipe
-from app.schemas.recipes import RecipeParams
+from app.models.recipes import Recipe as RecipeModel
+from app.models.recipes import RecipeIngredient as RecipeIngredientModel
+from app.models.steps import Step as StepModel
+from app.schemas.recipes import Ingredient as IngredientSchema
+from app.schemas.recipes import Recipe as RecipeSchema
+from app.schemas.recipes import RecipeParams as RecipeParamsSchema
 from app.utils.messages import messages
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,8 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 class RecipeCRUD:
     @classmethod
-    async def create(cls, recipe_schema: s_Recipe, session: AsyncSession):
-        recipe = await m_Recipe(
+    async def create(cls, recipe_schema: RecipeSchema, session: AsyncSession):
+        recipe = await RecipeModel(
             name=recipe_schema.name, description=recipe_schema.description
         ).create(session=session)
         await IngredientCRUD.bulk_create(
@@ -30,7 +30,7 @@ class RecipeCRUD:
 
     @staticmethod
     async def get(id: int, session: AsyncSession):
-        recipe = await m_Recipe.get(id=id, session=session)
+        recipe = await RecipeModel.get(id=id, session=session)
         if recipe is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=messages.RECIPE_NOT_FOUND
@@ -38,31 +38,31 @@ class RecipeCRUD:
         return recipe
 
     @staticmethod
-    async def get_all(recipe_params: RecipeParams, session: AsyncSession):
-        return await m_Recipe.filter(
+    async def get_all(params: RecipeParamsSchema, session: AsyncSession):
+        return await RecipeModel.filter(
             session=session,
-            order_by=recipe_params.order_by,
-            average_rating=recipe_params.average_rating,
+            order_by=params.order_by,
+            average_rating=params.average_rating,
         )
 
     @staticmethod
     async def get_by_ingredients(
-        ingredients: list[s_Ingredient], session: AsyncSession
+        ingredients: list[IngredientSchema], session: AsyncSession
     ):
-        return await m_Recipe.filter_by_ingredients(
+        return await RecipeModel.filter_by_ingredients(
             ingredients=ingredients, session=session
         )
 
     @classmethod
-    async def update(cls, id: int, recipe_schema: s_Recipe, session: AsyncSession):
+    async def update(cls, id: int, recipe_schema: RecipeSchema, session: AsyncSession):
         recipe = await cls.get(id=id, session=session)
         recipe.name = recipe_schema.name
         recipe.description = recipe_schema.description
-        recipes_ingredients = await m_RecipeIngredient.filter(
+        recipes_ingredients = await RecipeIngredientModel.filter(
             recipe_id=recipe.id, session=session
         )
-        await m_RecipeIngredient.delete(instances=recipes_ingredients, session=session)
-        await m_Step.delete(instances=recipe.steps, session=session)
+        await RecipeIngredientModel.bulk_delete(instances=recipes_ingredients, session=session)
+        await StepModel.bulk_delete(instances=recipe.steps, session=session)
         await IngredientCRUD.bulk_create(
             recipe_id=recipe.id,
             ingredients_schema=recipe_schema.ingredients,
@@ -77,7 +77,7 @@ class RecipeCRUD:
     @classmethod
     async def delete(cls, id: int, session: AsyncSession):
         recipe = await cls.get(id=id, session=session)
-        await m_Recipe.delete(instances=recipe, session=session)
+        await recipe.delete(session=session)
 
     @classmethod
     async def upload_photo(cls, id: int, photo: UploadFile, session: AsyncSession):
@@ -91,13 +91,12 @@ class RecipeCRUD:
 
     @staticmethod
     async def update_rating(
-        recipe: m_Recipe,
+        recipe: RecipeModel,
         review_rating: int,
         session: AsyncSession,
     ):
         recipe.reviews_count += 1
-        if recipe.reviews_count == 1:
-            recipe.average_rating = review_rating
+        if recipe.reviews_count == 1: recipe.average_rating = review_rating
         else:
             recipe.average_rating = round(
                 (

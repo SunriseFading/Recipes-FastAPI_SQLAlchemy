@@ -1,5 +1,5 @@
-from app.models.steps import Step as m_Step
-from app.schemas.steps import Step as s_Step
+from app.models.steps import Step as StepModel
+from app.schemas.steps import Step as StepSchema
 from app.utils.messages import messages
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,10 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 class StepCRUD:
     @staticmethod
     async def bulk_create(
-        recipe_id: int, steps_schema: list[s_Step], session: AsyncSession
+        recipe_id: int, steps_schema: list[StepSchema], session: AsyncSession
     ):
         steps = [
-            m_Step(
+            StepModel(
                 number=number,
                 name=step_schema.name,
                 time=step_schema.time,
@@ -20,11 +20,11 @@ class StepCRUD:
             )
             for number, step_schema in enumerate(steps_schema, start=1)
         ]
-        return await m_Step.bulk_create(instances=steps, session=session)
+        return await StepModel.bulk_create(instances=steps, session=session)
 
     @staticmethod
     async def get(id: int, session: AsyncSession):
-        step = await m_Step.get(id=id, session=session)
+        step = await StepModel.get(id=id, session=session)
         if step is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=messages.STEP_NOT_FOUND

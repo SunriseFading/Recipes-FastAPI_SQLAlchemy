@@ -1,6 +1,6 @@
 from app.config import jwt_settings
 from app.database import get_session
-from app.models.users import User as m_User
+from app.models.users import User as UserModel
 from app.schemas.users import User as s_User
 from app.utils.messages import messages
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -23,11 +23,11 @@ def get_jwt_settings():
     summary="User register",
 )
 async def register(user_schema: s_User, session: AsyncSession = Depends(get_session)):
-    if await m_User.get(email=user_schema.email, session=session):
+    if await UserModel.get(email=user_schema.email, session=session):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=messages.USER_ALREADY_EXISTS
         )
-    await m_User(**user_schema.dict()).create(session=session)
+    await UserModel(**user_schema.dict()).create(session=session)
     return {"detail": messages.USER_CREATED}
 
 
@@ -37,7 +37,7 @@ async def login(
     session: AsyncSession = Depends(get_session),
     authorize: AuthJWT = Depends(),
 ):
-    if (user := await m_User.get(email=user_schema.email, session=session)) is None:
+    if (user := await UserModel.get(email=user_schema.email, session=session)) is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=messages.USER_NOT_FOUND
         )

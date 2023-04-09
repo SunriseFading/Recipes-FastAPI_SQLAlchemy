@@ -56,18 +56,6 @@ class BaseRepository:
         return query
 
     @classmethod
-    async def search(
-        cls,
-        session: AsyncSession,
-        kwargs: dict | None = None,
-        order_by: str | None = None,
-    ):
-        query = select(cls)
-        query = cls.get_filters(query=query, kwargs=kwargs)
-        query = cls.get_order_by(query=query, order_by=order_by)
-        return await session.execute(query)
-
-    @classmethod
     async def get(cls, session: AsyncSession, **kwargs):
         query = select(cls)
         query = cls.get_filters(query=query, kwargs=kwargs)
@@ -103,8 +91,12 @@ class BaseRepository:
         await session.commit()
         return self
 
+    async def delete(self, session: AsyncSession):
+        await session.delete(self)
+        await session.commit()
+
     @classmethod
-    async def delete(cls, instances: list | object, session: AsyncSession):
+    async def bulk_delete(cls, instances: list | object, session: AsyncSession):
         if isinstance(instances, Iterable):
             for instance in instances:
                 await session.delete(instance)
