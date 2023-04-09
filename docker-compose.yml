@@ -1,0 +1,34 @@
+services:
+  app:
+    container_name: fastapi
+    build: .
+    working_dir: /code
+    command: bash -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 80"
+    restart: on-failure
+    volumes:
+      - .:/code
+    ports:
+      - "8000:80"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    container_name: postgres
+    image: postgres:15-bullseye
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -q -t 5 -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
