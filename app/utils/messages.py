@@ -20,6 +20,7 @@ class Messages:
     RECIPE_PHOTO_UPLOADED = "recipe photo uploaded"
 
     STEP_NOT_FOUND = "step not found"
+    STEP_PHOTO_UPLOADED = "step photo uploaded"
 
     REVIEW_SAVED = "review saved"
     REVIEW_ALREADY_LEFT = "review already left"

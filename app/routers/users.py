@@ -22,8 +22,10 @@ def get_jwt_settings():
     status_code=status.HTTP_201_CREATED,
     summary="User register",
 )
-async def register(user_schema: UserSchema, session: AsyncSession = Depends(get_session)):
-    if user := await user_service.get(email=user_schema.email, session=session):
+async def register(
+    user_schema: UserSchema, session: AsyncSession = Depends(get_session)
+):
+    if await user_service.get(email=user_schema.email, session=session):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=messages.USER_ALREADY_EXISTS
         )
@@ -37,7 +39,10 @@ async def login(
     session: AsyncSession = Depends(get_session),
     authorize: AuthJWT = Depends(),
 ):
-    user = await user_service.get(email=user_schema.email, session=session)
+    if not (user := await user_service.get(email=user_schema.email, session=session)):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=messages.USER_NOT_FOUND
+        )
     if not user.verify_password(unhashed_password=user_schema.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=messages.WRONG_PASSWORD

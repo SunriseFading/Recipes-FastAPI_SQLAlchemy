@@ -100,7 +100,7 @@ class RecipeService:
 
     async def delete(self, id: int, session: AsyncSession):
         recipe = await self.get(id=id, session=session)
-        await self.recipe_repository.delete(instance=recipe)
+        await self.recipe_repository.delete(instance=recipe, session=session)
 
     async def upload_photo(self, id: int, photo: UploadFile, session: AsyncSession):
         recipe = await self.get(id=id, session=session)
