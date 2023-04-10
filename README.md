@@ -11,3 +11,4 @@ docker compose up --build
 ```
 docker exec fastapi pytest
 ```
+4. Swagger находится по адресу: localhost:8000/docs#/
