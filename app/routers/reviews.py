@@ -1,7 +1,7 @@
 from app.config import jwt_settings
-from app.services.reviews import ReviewCRUD
 from app.database import get_session
 from app.schemas.reviews import ReviewParams as ReviewParamsSchema
+from app.services.reviews import review_service
 from app.utils.messages import messages
 from fastapi import APIRouter, Depends, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -30,7 +30,7 @@ async def create(
 ):
     authorize.jwt_required()
     user_email = authorize.get_jwt_subject()
-    await ReviewCRUD.create(
+    await review_service.create(
         id=id, params=params, user_email=user_email, session=session
     )
     return {"detail": messages.REVIEW_SAVED}

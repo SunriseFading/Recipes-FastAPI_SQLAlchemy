@@ -1,7 +1,7 @@
 from app.config import jwt_settings
 from app.database import get_session
-from app.models.users import User as UserModel
-from app.schemas.users import User as s_User
+from app.schemas.users import User as UserSchema
+from app.services.users import user_service
 from app.utils.messages import messages
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_jwt_auth import AuthJWT
@@ -22,26 +22,22 @@ def get_jwt_settings():
     status_code=status.HTTP_201_CREATED,
     summary="User register",
 )
-async def register(user_schema: s_User, session: AsyncSession = Depends(get_session)):
-    if await UserModel.get(email=user_schema.email, session=session):
+async def register(user_schema: UserSchema, session: AsyncSession = Depends(get_session)):
+    if user := await user_service.get(email=user_schema.email, session=session):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=messages.USER_ALREADY_EXISTS
         )
-    await UserModel(**user_schema.dict()).create(session=session)
+    await user_service.create(user_schema=user_schema, session=session)
     return {"detail": messages.USER_CREATED}
 
 
 @router.post("/login/", status_code=status.HTTP_200_OK, summary="User login")
 async def login(
-    user_schema: s_User,
+    user_schema: UserSchema,
     session: AsyncSession = Depends(get_session),
     authorize: AuthJWT = Depends(),
 ):
-    if (user := await UserModel.get(email=user_schema.email, session=session)) is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=messages.USER_NOT_FOUND
-        )
-    print(user)
+    user = await user_service.get(email=user_schema.email, session=session)
     if not user.verify_password(unhashed_password=user_schema.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=messages.WRONG_PASSWORD

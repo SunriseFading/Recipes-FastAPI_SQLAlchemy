@@ -5,20 +5,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class PhotoRepository:
-    async def upload_photo(self, photo: UploadFile, session: AsyncSession):
-        cls = type(self)
-        if os.path.exists(self.photo):
-            os.remove(self.photo)
+    async def upload_photo(self, instance, photo: UploadFile, session: AsyncSession):
+        cls = type(instance)
+        if os.path.exists(instance.photo):
+            os.remove(instance.photo)
         photo_path = os.path.join(
-            "media", cls.__name__.lower(), self.name, photo.filename
+            "media", cls.__name__.lower(), instance.name, photo.filename
         )
         if not os.path.exists(os.path.dirname(photo_path)):
             os.makedirs(os.path.dirname(photo_path))
         with open(photo_path, "wb") as buffer:
             buffer.write(await photo.read())
-        self.photo = photo_path
-        await self.update(session=session)
+        instance.photo = photo_path
+        await self.update(instance=instance, session=session)
 
-    def download_photo(self):
-        if os.path.exists(self.photo):
-            return self.photo
+    def download_photo(self, instance):
+        if os.path.exists(instance.photo):
+            return instance.photo

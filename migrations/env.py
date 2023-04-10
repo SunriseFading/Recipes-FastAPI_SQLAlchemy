@@ -10,6 +10,7 @@ from app.models.recipes import *
 from app.models.ingredients import *
 from app.models.reviews import *
 from app.models.steps import *
+from app.models.recipes_ingredients import *
 from alembic import context
 from app.config import settings
 

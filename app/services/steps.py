@@ -1,14 +1,17 @@
 from app.models.steps import Step as StepModel
+from app.repositories.steps import step_repository
 from app.schemas.steps import Step as StepSchema
 from app.utils.messages import messages
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class StepCRUD:
-    @staticmethod
+class StepService:
+    def __init__(self, step_repository):
+        self.step_repository = step_repository
+
     async def bulk_create(
-        recipe_id: int, steps_schema: list[StepSchema], session: AsyncSession
+        self, recipe_id: int, steps_schema: list[StepSchema], session: AsyncSession
     ):
         steps = [
             StepModel(
@@ -20,23 +23,28 @@ class StepCRUD:
             )
             for number, step_schema in enumerate(steps_schema, start=1)
         ]
-        return await StepModel.bulk_create(instances=steps, session=session)
+        return await self.step_repository.bulk_create(instances=steps, session=session)
 
-    @staticmethod
-    async def get(id: int, session: AsyncSession):
-        step = await StepModel.get(id=id, session=session)
+    async def get(self, id: int, session: AsyncSession):
+        step = await step_repository.get(id=id, session=session)
         if step is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=messages.STEP_NOT_FOUND
             )
         return step
 
-    @classmethod
-    async def upload_photo(cls, id: int, photo: UploadFile, session: AsyncSession):
-        step = await cls.get(id=id, session=session)
-        await step.upload_photo(photo=photo, session=session)
+    async def bulk_delete(self, steps: list[StepModel], session: AsyncSession):
+        await self.step_repository.bulk_delete(instances=steps, session=session)
 
-    @classmethod
-    async def download_photo(cls, id: int, session: AsyncSession):
-        step = await cls.get(id=id, session=session)
-        return step.download_photo()
+    async def upload_photo(self, id: int, photo: UploadFile, session: AsyncSession):
+        step = await self.get(id=id, session=session)
+        await self.step_repository.upload_photo(
+            instance=step, photo=photo, session=session
+        )
+
+    async def download_photo(self, id: int, session: AsyncSession):
+        step = await self.get(id=id, session=session)
+        return self.step_repository.download_photo(instance=step)
+
+
+step_service = StepService(step_repository=step_repository)

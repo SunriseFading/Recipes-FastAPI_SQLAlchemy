@@ -1,9 +1,9 @@
-from app.services.recipes import RecipeService
 from app.database import async_session
 from app.models.recipes import Recipe as RecipeModel
 from app.schemas.ingredients import Ingredient
 from app.schemas.recipes import Recipe as RecipeSchema
 from app.schemas.steps import Step
+from app.services.recipes import RecipeService
 
 
 async def create_init_data(

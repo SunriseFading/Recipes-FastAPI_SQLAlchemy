@@ -1,9 +1,10 @@
 from app.config import jwt_settings
-from app.services.recipes import RecipeService
 from app.database import get_session
 from app.schemas.recipes import Ingredient as IngredientSchema
 from app.schemas.recipes import Recipe as RecipeSchema
-from app.schemas.recipes import RecipeParams as RecipeParamsSchema, RecipeResponse as RecipeResponseSchema
+from app.schemas.recipes import RecipeParams as RecipeParamsSchema
+from app.schemas.recipes import RecipeResponse as RecipeResponseSchema
+from app.services.recipes import recipe_service
 from app.utils.messages import messages
 from fastapi import APIRouter, Depends, Security, UploadFile, status
 from fastapi.responses import FileResponse
@@ -28,9 +29,7 @@ async def get_all(
     params: RecipeParamsSchema = Depends(),
     session: AsyncSession = Depends(get_session),
 ):
-    if recipes := await RecipeService.get_all(
-        params=params, session=session
-    ):
+    if recipes := await recipe_service.get_all(params=params, session=session):
         return [RecipeResponseSchema.from_orm(recipe) for recipe in recipes]
 
 
@@ -43,7 +42,7 @@ async def get_by_ingredients(
     ingredients: list[IngredientSchema],
     session: AsyncSession = Depends(get_session),
 ):
-    if recipes := await RecipeService.get_by_ingredients(
+    if recipes := await recipe_service.get_by_ingredients(
         ingredients=ingredients, session=session
     ):
         return [RecipeResponseSchema.from_orm(recipe) for recipe in recipes]
@@ -51,7 +50,7 @@ async def get_by_ingredients(
 
 @router.get("/get/{id}", status_code=status.HTTP_200_OK, summary="Get recipe by id")
 async def get(id: int, session: AsyncSession = Depends(get_session)):
-    if recipe := await RecipeService.get(id=id, session=session):
+    if recipe := await recipe_service.get(id=id, session=session):
         return RecipeResponseSchema.from_orm(recipe)
 
 
@@ -63,36 +62,8 @@ async def create(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
     authorize.jwt_required()
-    await RecipeService.create(recipe_schema=recipe_schema, session=session)
+    await recipe_service.create(recipe_schema=recipe_schema, session=session)
     return {"detail": messages.RECIPE_CREATED}
-
-
-@router.post(
-    "/upload/{id}", status_code=status.HTTP_200_OK, summary="Upload recipe photo"
-)
-async def upload_photo(
-    id: int,
-    photo: UploadFile,
-    session: AsyncSession = Depends(get_session),
-    authorize: AuthJWT = Depends(),
-    credentials: HTTPAuthorizationCredentials = Security(security),
-):
-    authorize.jwt_required()
-    await RecipeService.upload_photo(id=id, photo=photo, session=session)
-    return {"detail": messages.RECIPE_PHOTO_UPLOADED}
-
-
-@router.post(
-    "/download/{id}", status_code=status.HTTP_200_OK, summary="Download recipe photo"
-)
-async def download_photo(
-    id: int,
-    session: AsyncSession = Depends(get_session),
-    authorize: AuthJWT = Depends(),
-    credentials: HTTPAuthorizationCredentials = Security(security),
-):
-    authorize.jwt_required()
-    return FileResponse(await RecipeService.download_photo(id=id, session=session))
 
 
 @router.post(
@@ -106,7 +77,7 @@ async def update(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
     authorize.jwt_required()
-    await RecipeService.update(id=id, recipe_schema=recipe_schema, session=session)
+    await recipe_service.update(id=id, recipe_schema=recipe_schema, session=session)
     return {"detail": messages.RECIPE_UPDATED}
 
 
@@ -118,5 +89,34 @@ async def delete(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
     authorize.jwt_required()
-    await RecipeService.delete(id=id, session=session)
+    await recipe_service.delete(id=id, session=session)
     return {"detail": messages.RECIPE_DELETED}
+
+
+@router.post(
+    "/upload/{id}", status_code=status.HTTP_200_OK, summary="Upload recipe photo"
+)
+async def upload_photo(
+    id: int,
+    photo: UploadFile,
+    session: AsyncSession = Depends(get_session),
+    authorize: AuthJWT = Depends(),
+    credentials: HTTPAuthorizationCredentials = Security(security),
+):
+    authorize.jwt_required()
+    await recipe_service.upload_photo(id=id, photo=photo, session=session)
+    return {"detail": messages.RECIPE_PHOTO_UPLOADED}
+
+
+@router.post(
+    "/download/{id}", status_code=status.HTTP_200_OK, summary="Download recipe photo"
+)
+async def download_photo(
+    id: int,
+    session: AsyncSession = Depends(get_session),
+    authorize: AuthJWT = Depends(),
+    credentials: HTTPAuthorizationCredentials = Security(security),
+):
+    authorize.jwt_required()
+    if photo := await recipe_service.download_photo(id=id, session=session):
+        return FileResponse(photo)

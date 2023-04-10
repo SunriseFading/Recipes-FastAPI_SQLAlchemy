@@ -1,10 +1,9 @@
 from app.database import Base
-from app.repositories.base import BaseRepository
 from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 
 
-class Review(Base, BaseRepository):
+class Review(Base):
     __tablename__ = "reviews"
 
     id = Column(Integer, primary_key=True, index=True)

@@ -1,18 +1,23 @@
 from app.models.ingredients import Ingredient as IngredientModel
-from app.models.recipes import RecipeIngredient as RecipeIngredientModel
+from app.repositories.ingredients import ingredient_repository
 from app.schemas.ingredients import Ingredient as IngredientSchema
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class IngredientService:
-    @staticmethod
+    def __init__(self, ingredient_repository):
+        self.ingredient_repository = ingredient_repository
+
     async def bulk_create(
-        recipe_id: int, ingredients_schema: list[IngredientSchema], session: AsyncSession
+        self, ingredients_schema: list[IngredientSchema], session: AsyncSession
     ):
+        ingredients = []
         for ingredient_schema in ingredients_schema:
-            ingredient = await IngredientModel(name=ingredient_schema.name).get_or_create(
-                session=session
+            ingredient = await self.ingredient_repository.get_or_create(
+                instance=IngredientModel(name=ingredient_schema.name), session=session
             )
-            await RecipeIngredientModel(
-                recipe_id=recipe_id, ingredient_id=ingredient.id
-            ).create(session=session)
+            ingredients.append(ingredient)
+        return ingredients
+
+
+ingredient_service = IngredientService(ingredient_repository=ingredient_repository)

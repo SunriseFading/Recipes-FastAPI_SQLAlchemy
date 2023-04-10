@@ -1,8 +1,9 @@
 from app.config import jwt_settings
-from app.services.recipes import StepCRUD
 from app.database import get_session
+from app.services.steps import step_service
 from app.utils.messages import messages
 from fastapi import APIRouter, Depends, Security, UploadFile, status
+from fastapi.responses import FileResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi_jwt_auth import AuthJWT
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,8 +31,8 @@ async def upload_photo(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
     authorize.jwt_required()
-    await StepCRUD.upload_photo(id=id, photo=photo, session=session)
-    return {"detail": messages.RECIPE_PHOTO_UPLOADED}
+    await step_service.upload_photo(id=id, photo=photo, session=session)
+    return {"detail": messages.STEP_PHOTO_UPLOADED}
 
 
 @router.post(
@@ -44,4 +45,5 @@ async def download_photo(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
     authorize.jwt_required()
-    return await StepCRUD.download_photo(id=id, session=session)
+    if photo := await step_service.download_photo(id=id, session=session):
+        return FileResponse(photo)

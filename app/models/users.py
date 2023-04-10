@@ -1,11 +1,9 @@
 import bcrypt
 from app.database import Base
-from app.repositories.base import BaseRepository
 from sqlalchemy import Column, Integer, String
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class User(Base, BaseRepository):
+class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -17,11 +15,3 @@ class User(Base, BaseRepository):
 
     def verify_password(self, unhashed_password: str) -> bool:
         return bcrypt.checkpw(unhashed_password.encode(), self.password.encode())
-
-    async def create(self, session: AsyncSession):
-        self.password = self.hash_password()
-        return await super().create(session=session)
-
-    async def update(self, session: AsyncSession):
-        self.password = self.hash_password()
-        return await super().create(session=session)
