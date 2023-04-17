@@ -1,7 +1,7 @@
 from app.config import jwt_settings
 from app.database import get_session
 from app.schemas.users import User as UserSchema
-from app.services.users import user_service
+from app.controllers.users import user_controller
 from app.utils.messages import messages
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_jwt_auth import AuthJWT
@@ -25,11 +25,11 @@ def get_jwt_settings():
 async def register(
     user_schema: UserSchema, session: AsyncSession = Depends(get_session)
 ):
-    if await user_service.get(email=user_schema.email, session=session):
+    if await user_controller.get(email=user_schema.email, session=session):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=messages.USER_ALREADY_EXISTS
         )
-    await user_service.create(user_schema=user_schema, session=session)
+    await user_controller.create(user_schema=user_schema, session=session)
     return {"detail": messages.USER_CREATED}
 
 
@@ -39,7 +39,7 @@ async def login(
     session: AsyncSession = Depends(get_session),
     authorize: AuthJWT = Depends(),
 ):
-    if not (user := await user_service.get(email=user_schema.email, session=session)):
+    if not (user := await user_controller.get(email=user_schema.email, session=session)):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=messages.USER_NOT_FOUND
         )

@@ -1,6 +1,6 @@
 from app.config import jwt_settings
 from app.database import get_session
-from app.services.steps import step_service
+from app.controllers.steps import step_controller
 from app.utils.messages import messages
 from fastapi import APIRouter, Depends, Security, UploadFile, status
 from fastapi.responses import FileResponse
@@ -31,7 +31,7 @@ async def upload_photo(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
     authorize.jwt_required()
-    await step_service.upload_photo(id=id, photo=photo, session=session)
+    await step_controller.upload_photo(id=id, photo=photo, session=session)
     return {"detail": messages.STEP_PHOTO_UPLOADED}
 
 
@@ -45,5 +45,5 @@ async def download_photo(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
     authorize.jwt_required()
-    if photo := await step_service.download_photo(id=id, session=session):
+    if photo := await step_controller.download_photo(id=id, session=session):
         return FileResponse(photo)

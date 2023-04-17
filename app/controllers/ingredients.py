@@ -4,7 +4,7 @@ from app.schemas.ingredients import Ingredient as IngredientSchema
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class IngredientService:
+class IngredientController:
     def __init__(self, ingredient_repository):
         self.ingredient_repository = ingredient_repository
 
@@ -20,4 +20,4 @@ class IngredientService:
         return ingredients
 
 
-ingredient_service = IngredientService(ingredient_repository=ingredient_repository)
+ingredient_controller = IngredientController(ingredient_repository=ingredient_repository)

@@ -4,7 +4,7 @@ from app.schemas.users import User as UserSchema
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class UserService:
+class UserController:
     def __init__(self, user_repository):
         self.user_repository = user_repository
 
@@ -17,4 +17,4 @@ class UserService:
         return await self.user_repository.get(email=email, session=session)
 
 
-user_service = UserService(user_repository=user_repository)
+user_controller = UserController(user_repository=user_repository)

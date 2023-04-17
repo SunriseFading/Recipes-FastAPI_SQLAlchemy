@@ -6,7 +6,7 @@ from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class StepService:
+class StepController:
     def __init__(self, step_repository):
         self.step_repository = step_repository
 
@@ -47,4 +47,4 @@ class StepService:
         return self.step_repository.download_photo(instance=step)
 
 
-step_service = StepService(step_repository=step_repository)
+step_controller = StepController(step_repository=step_repository)

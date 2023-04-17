@@ -3,26 +3,26 @@ from app.repositories.recipes import recipe_repository
 from app.schemas.recipes import Ingredient as IngredientSchema
 from app.schemas.recipes import Recipe as RecipeSchema
 from app.schemas.recipes import RecipeParams as RecipeParamsSchema
-from app.services.ingredients import ingredient_service
-from app.services.recipes_ingredients import recipe_ingredient_service
-from app.services.steps import step_service
+from app.controllers.ingredients import ingredient_controller
+from app.controllers.recipes_ingredients import recipe_ingredient_controller
+from app.controllers.steps import step_controller
 from app.utils.messages import messages
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class RecipeService:
+class RecipeController:
     def __init__(
         self,
         recipe_repository,
-        ingredient_service,
-        recipe_ingredient_service,
-        step_service,
+        ingredient_controller,
+        recipe_ingredient_controller,
+        step_controller,
     ):
         self.recipe_repository = recipe_repository
-        self.ingredient_service = ingredient_service
-        self.recipe_ingredient_service = recipe_ingredient_service
-        self.step_service = step_service
+        self.ingredient_controller = ingredient_controller
+        self.recipe_ingredient_controller = recipe_ingredient_controller
+        self.step_controller = step_controller
 
     async def create(self, recipe_schema: RecipeSchema, session: AsyncSession):
         recipe = await self.recipe_repository.create(
@@ -32,15 +32,15 @@ class RecipeService:
             session=session,
         )
 
-        ingredients = await self.ingredient_service.bulk_create(
+        ingredients = await self.ingredient_controller.bulk_create(
             ingredients_schema=recipe_schema.ingredients, session=session
         )
 
-        await self.recipe_ingredient_service.bulk_create(
+        await self.recipe_ingredient_controller.bulk_create(
             recipe_id=recipe.id, ingredients=ingredients, session=session
         )
 
-        await self.step_service.bulk_create(
+        await self.step_controller.bulk_create(
             recipe_id=recipe.id, steps_schema=recipe_schema.steps, session=session
         )
 
@@ -74,24 +74,24 @@ class RecipeService:
         recipe.name = recipe_schema.name
         recipe.description = recipe_schema.description
 
-        recipes_ingredients = await self.recipe_ingredient_service.filter(
+        recipes_ingredients = await self.recipe_ingredient_controller.filter(
             recipe_id=recipe.id, session=session
         )
-        await self.recipe_ingredient_service.bulk_delete(
+        await self.recipe_ingredient_controller.bulk_delete(
             recipes_ingredients=recipes_ingredients, session=session
         )
 
-        await self.step_service.bulk_delete(steps=recipe.steps, session=session)
+        await self.step_controller.bulk_delete(steps=recipe.steps, session=session)
 
-        ingredients = await self.ingredient_service.bulk_create(
+        ingredients = await self.ingredient_controller.bulk_create(
             ingredients_schema=recipe_schema.ingredients, session=session
         )
 
-        await self.recipe_ingredient_service.bulk_create(
+        await self.recipe_ingredient_controller.bulk_create(
             recipe_id=recipe.id, ingredients=ingredients, session=session
         )
 
-        await self.step_service.bulk_create(
+        await self.step_controller.bulk_create(
             recipe_id=recipe.id, steps_schema=recipe_schema.steps, session=session
         )
 
@@ -132,9 +132,9 @@ class RecipeService:
         await self.recipe_repository.update(instance=recipe, session=session)
 
 
-recipe_service = RecipeService(
+recipe_controller = RecipeController(
     recipe_repository=recipe_repository,
-    ingredient_service=ingredient_service,
-    recipe_ingredient_service=recipe_ingredient_service,
-    step_service=step_service,
+    ingredient_controller=ingredient_controller,
+    recipe_ingredient_controller=recipe_ingredient_controller,
+    step_controller=step_controller,
 )

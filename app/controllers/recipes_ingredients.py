@@ -4,7 +4,7 @@ from app.repositories.recipe_ingredients import recipe_ingredient_repository
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class RecipeIngredientService:
+class RecipeIngredientController:
     def __init__(self, recipe_ingredient_repository):
         self.recipe_ingredient_repository = recipe_ingredient_repository
 
@@ -32,6 +32,6 @@ class RecipeIngredientService:
         )
 
 
-recipe_ingredient_service = RecipeIngredientService(
+recipe_ingredient_controller = RecipeIngredientController(
     recipe_ingredient_repository=recipe_ingredient_repository
 )
